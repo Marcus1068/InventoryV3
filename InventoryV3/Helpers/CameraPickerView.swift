@@ -5,6 +5,7 @@
 //  Created by Marcus Deuß on 09.03.26.
 //
 
+#if !targetEnvironment(macCatalyst)
 import SwiftUI
 import UIKit
 
@@ -49,3 +50,4 @@ struct CameraPickerView: UIViewControllerRepresentable {
         }
     }
 }
+#endif

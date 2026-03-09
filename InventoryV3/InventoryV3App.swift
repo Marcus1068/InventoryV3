@@ -35,6 +35,7 @@ struct InventoryV3App: App {
         WindowGroup {
             ZStack {
                 ContentView()
+                #if !targetEnvironment(macCatalyst)
                 if showSplash {
                     SplashScreenView {
                         withAnimation(.easeInOut(duration: 0.55)) {
@@ -44,8 +45,12 @@ struct InventoryV3App: App {
                     .transition(.opacity)
                     .zIndex(1)
                 }
+                #endif
             }
         }
+        #if targetEnvironment(macCatalyst)
+        .defaultSize(width: 1024, height: 768)
+        #endif
         .modelContainer(sharedModelContainer)
     }
 }

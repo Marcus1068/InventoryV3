@@ -83,11 +83,13 @@ struct AddEditRoomView: View {
                         .disabled(!canSave)
                 }
             }
+            #if !targetEnvironment(macCatalyst)
             .sheet(isPresented: $showingCamera) {
                 CameraPickerView { image in
                     photoData = ImageHelper.downscaled(image)
                 }
             }
+            #endif
             .task(id: selectedPhotoItem) {
                 guard let item = selectedPhotoItem else { return }
                 if let data = try? await item.loadTransferable(type: Data.self),

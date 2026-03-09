@@ -122,6 +122,7 @@ struct AddEditInventoryView: View {
                     .disabled(!viewModel.canSave)
                 }
             }
+            #if !targetEnvironment(macCatalyst)
             .sheet(isPresented: $showingCamera) {
                 CameraPickerView { image in
                     if let data = ImageHelper.downscaled(image) {
@@ -129,6 +130,7 @@ struct AddEditInventoryView: View {
                     }
                 }
             }
+            #endif
             .fileImporter(
                 isPresented: $showingFilePicker,
                 allowedContentTypes: [.pdf]

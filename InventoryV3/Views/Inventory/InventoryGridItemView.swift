@@ -17,6 +17,9 @@ struct InventoryGridItemView: View {
         }
         .clipShape(.rect(cornerRadius: 16))
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        #if !targetEnvironment(macCatalyst)
+        .hoverEffect()
+        #endif
     }
 
     private var imageArea: some View {
