@@ -14,6 +14,7 @@
 		2C4AA58D2F5F05D700F1BDCC /* Exceptions for "InventoryV3" folder in "InventoryV3" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AppIcon.icns,
 				Info.plist,
 			);
 			target = 2C4AA57F2F5F05D700F1BDCC /* InventoryV3 */;
@@ -30,6 +31,30 @@
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2C4AA5A02F5F05D700F1BDCC /* Inject Mac App Icon */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/InventoryV3/AppIcon.icns",
+			);
+			name = "Inject Mac App Icon";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(WRAPPER_NAME)/Contents/Resources/AppIcon.icns",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Copy the full-resolution .icns over the actool-generated one for Mac Catalyst builds.\n# actool with --ui-framework-family uikit only produces 4 sizes; iconutil produces all 10.\nif [ \"$PLATFORM_NAME\" = \"macosx\" ]; then\n  DEST=\"$BUILT_PRODUCTS_DIR/$WRAPPER_NAME/Contents/Resources/AppIcon.icns\"\n  chmod +w \"$DEST\" 2>/dev/null || true\n  cp -f \"$SRCROOT/InventoryV3/AppIcon.icns\" \"$DEST\"\n  echo \"Injected full Mac app icon.\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2C4AA57D2F5F05D700F1BDCC /* Frameworks */ = {
@@ -68,6 +93,7 @@
 				2C4AA57C2F5F05D700F1BDCC /* Sources */,
 				2C4AA57D2F5F05D700F1BDCC /* Frameworks */,
 				2C4AA57E2F5F05D700F1BDCC /* Resources */,
+				2C4AA5A02F5F05D700F1BDCC /* Inject Mac App Icon */,
 			);
 			buildRules = (
 			);
@@ -150,6 +176,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = InventoryV3/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Inventory App";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -159,7 +187,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "de.marcus-deuss.InventoryV3";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -185,6 +213,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = InventoryV3/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Inventory App";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -194,7 +224,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "de.marcus-deuss.InventoryV3";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
