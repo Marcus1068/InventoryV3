@@ -17,7 +17,7 @@ struct AboutView: View {
                 .listRowBackground(Color.clear)
 
                 Section("Links") {
-                    Link(destination: URL(string: "https://github.com/mdeuß/InventoryV3")!) {
+                    Link(destination: URL(string: "https://github.com/Marcus1068/InventoryV3")!) {
                         Label("GitHub Repository", systemImage: "link")
                     }
                 }
