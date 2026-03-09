@@ -15,7 +15,7 @@ final class InventoryItem {
     var price: Double = 0.0
     var remark: String = ""
     var serialNumber: String = ""
-    var warranty: String = ""
+    var warrantyMonths: Int = 0
     var dateAdded: Date = Date.now
     var imageData: Data? = nil
     var pdfData: Data? = nil

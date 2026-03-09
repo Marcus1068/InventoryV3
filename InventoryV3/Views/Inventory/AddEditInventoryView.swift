@@ -25,7 +25,7 @@ final class AddEditInventoryViewModel {
     var price: Double
     var remark: String
     var serialNumber: String
-    var warranty: String
+    var warrantyMonths: Int
     var imageData: Data?
     var pdfData: Data?
     var selectedRoom: Room?
@@ -46,7 +46,7 @@ final class AddEditInventoryViewModel {
         price = item?.price ?? 0.0
         remark = item?.remark ?? ""
         serialNumber = item?.serialNumber ?? ""
-        warranty = item?.warranty ?? ""
+        warrantyMonths = item?.warrantyMonths ?? 0
         imageData = item?.imageData
         pdfData = item?.pdfData
         selectedRoom = item?.room
@@ -61,7 +61,7 @@ final class AddEditInventoryViewModel {
         target.price = price
         target.remark = remark
         target.serialNumber = serialNumber
-        target.warranty = warranty
+        target.warrantyMonths = warrantyMonths
         target.imageData = imageData
         target.pdfData = pdfData
         target.room = selectedRoom
@@ -103,6 +103,7 @@ struct AddEditInventoryView: View {
         NavigationStack {
             Form {
                 detailsSection
+                warrantySection
                 photoSection
                 documentSection
                 classifySection
@@ -167,11 +168,23 @@ struct AddEditInventoryView: View {
 
     // MARK: - Sections
 
+    private var warrantySection: some View {
+        Section("Warranty (months)") {
+            Picker("Warranty", selection: $viewModel.warrantyMonths) {
+                Text("None").tag(0)
+                ForEach([6, 12, 24, 36, 48, 60], id: \.self) { months in
+                    Text("\(months)").tag(months)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+    }
+
     private var detailsSection: some View {
         Section("Item Details") {
             TextField("Name", text: $viewModel.name)
             TextField("Serial Number", text: $viewModel.serialNumber)
-            TextField("Warranty", text: $viewModel.warranty)
             HStack {
                 Text("Price")
                 Spacer()

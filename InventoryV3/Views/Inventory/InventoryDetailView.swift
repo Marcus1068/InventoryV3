@@ -69,8 +69,10 @@ struct InventoryDetailView: View {
             if !item.serialNumber.isEmpty {
                 LabeledContent("Serial Number", value: item.serialNumber)
             }
-            if !item.warranty.isEmpty {
-                LabeledContent("Warranty", value: item.warranty)
+            if item.warrantyMonths > 0 {
+                LabeledContent("Warranty") {
+                    Text("\(item.warrantyMonths) months")
+                }
             }
             LabeledContent("Added", value: item.dateAdded.formatted(date: .abbreviated, time: .omitted))
             if !item.remark.isEmpty {
