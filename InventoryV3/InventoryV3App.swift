@@ -12,12 +12,18 @@ import SwiftData
 struct InventoryV3App: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            InventoryItem.self,
+            Room.self,
+            Brand.self,
+            ItemCategory.self,
+            Owner.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        let configuration = ModelConfiguration(
+            schema: schema,
+            cloudKitDatabase: .automatic
+        )
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
