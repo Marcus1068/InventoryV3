@@ -12,22 +12,9 @@ struct AboutView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack(spacing: 16) {
-                        Image(systemName: "shippingbox.fill")
-                            .font(.system(size: 52))
-                            .foregroundStyle(.tint)
-                            .frame(width: 80, height: 80)
-                            .glassEffect(.regular, in: .rect(cornerRadius: 18))
-                        VStack(alignment: .leading) {
-                            Text("InventoryV3")
-                                .bold()
-                                .font(.title3)
-                            Text("Version \(Bundle.main.appVersion)")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
+                    AboutLogoView()
                 }
+                .listRowBackground(Color.clear)
 
                 Section("Links") {
                     Link(destination: URL(string: "https://github.com/mdeuß/InventoryV3")!) {
