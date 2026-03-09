@@ -138,13 +138,12 @@ struct AddEditInventoryView: View {
                     viewModel.pdfData = try? Data(contentsOf: url)
                 }
             }
-            .onChange(of: selectedPhotoItem) { _, newItem in
-                Task {
-                    if let data = try? await newItem?.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data),
-                       let scaled = ImageHelper.downscaled(uiImage) {
-                        viewModel.imageData = scaled
-                    }
+            .task(id: selectedPhotoItem) {
+                guard let item = selectedPhotoItem else { return }
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data),
+                   let scaled = ImageHelper.downscaled(uiImage) {
+                    viewModel.imageData = scaled
                 }
             }
             .alert("Remove Photo?", isPresented: $showingRemoveImageAlert) {

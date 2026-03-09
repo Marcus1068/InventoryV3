@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct InventoryV3App: App {
+    @State private var showSplash = true
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             InventoryItem.self,
@@ -31,7 +33,18 @@ struct InventoryV3App: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ZStack {
+                ContentView()
+                if showSplash {
+                    SplashScreenView {
+                        withAnimation(.easeInOut(duration: 0.55)) {
+                            showSplash = false
+                        }
+                    }
+                    .transition(.opacity)
+                    .zIndex(1)
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
