@@ -47,6 +47,24 @@ struct InventoryV3App: App {
                 }
                 #endif
             }
+            #if targetEnvironment(macCatalyst)
+            .task {
+                // Configure resizability immediately, then wait for the system to
+                // finish its own initial window placement before restoring our frame.
+                WindowManager.configureResizability()
+                try? await Task.sleep(for: .milliseconds(250))
+                WindowManager.restoreFrame()
+            }
+            .task {
+                // UIScene.willDeactivateNotification fires on both manual deactivation
+                // and Cmd+Q quit — unlike scenePhase .inactive, which is skipped on quit.
+                for await _ in NotificationCenter.default.notifications(
+                    named: UIScene.willDeactivateNotification
+                ) {
+                    WindowManager.save()
+                }
+            }
+            #endif
         }
         #if targetEnvironment(macCatalyst)
         .defaultSize(width: 1024, height: 768)
