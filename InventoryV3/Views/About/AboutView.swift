@@ -12,6 +12,7 @@ struct AboutView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showSampleDataConfirmation = false
     @State private var showSampleDataSuccess = false
+    @State private var showDeleteAllConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -42,6 +43,26 @@ struct AboutView: View {
                         Button("Cancel", role: .cancel) {}
                     } message: {
                         Text("This will add sample rooms, brands, categories, owners, and 10 inventory items to your existing data.")
+                    }
+
+                    Button("Delete All Data", systemImage: "trash") {
+                        showDeleteAllConfirmation = true
+                    }
+                    .foregroundStyle(.red)
+                    .confirmationDialog(
+                        "Delete All Data",
+                        isPresented: $showDeleteAllConfirmation
+                    ) {
+                        Button("Delete All Data", role: .destructive) {
+                            try? modelContext.delete(model: InventoryItem.self)
+                            try? modelContext.delete(model: Room.self)
+                            try? modelContext.delete(model: Brand.self)
+                            try? modelContext.delete(model: ItemCategory.self)
+                            try? modelContext.delete(model: Owner.self)
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("This will permanently delete all inventory items, rooms, brands, categories, and owners. This cannot be undone.")
                     }
                 }
 
