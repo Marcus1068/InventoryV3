@@ -75,7 +75,7 @@ struct AboutView: View {
             .alert("Sample Data Loaded", isPresented: $showSampleDataSuccess) {
                 Button("OK") {}
             } message: {
-                Text("10 sample inventory items with rooms, brands, categories, and owners have been added.")
+                Text("50 sample inventory items with rooms, brands, categories, and owners have been added.")
             }
         }
     }
