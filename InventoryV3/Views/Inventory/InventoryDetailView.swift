@@ -8,37 +8,12 @@
 import SwiftUI
 import SwiftData
 
-struct InventoryDetailView: View {
+// MARK: - Section Views
+
+private struct PhotoSection: View {
     let item: InventoryItem
 
-    @State private var showingEdit = false
-
     var body: some View {
-        List {
-            photoSection
-            detailsSection
-            classifySection
-            if item.pdfData != nil {
-                documentSection
-            }
-        }
-        .navigationTitle(item.name.isEmpty ? "Item" : item.name)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Edit", systemImage: "pencil") {
-                    showingEdit = true
-                }
-            }
-        }
-        .sheet(isPresented: $showingEdit) {
-            AddEditInventoryView(item: item)
-        }
-    }
-
-    // MARK: - Sections
-
-    private var photoSection: some View {
         Section {
             if let data = item.imageData, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
@@ -59,8 +34,12 @@ struct InventoryDetailView: View {
             }
         }
     }
+}
 
-    private var detailsSection: some View {
+private struct DetailsSection: View {
+    let item: InventoryItem
+
+    var body: some View {
         Section("Details") {
             LabeledContent("Name", value: item.name.isEmpty ? "—" : item.name)
             LabeledContent("Price") {
@@ -86,8 +65,12 @@ struct InventoryDetailView: View {
             }
         }
     }
+}
 
-    private var classifySection: some View {
+private struct ClassifySection: View {
+    let item: InventoryItem
+
+    var body: some View {
         Section("Classify") {
             if let room = item.room {
                 LabeledContent("Room") {
@@ -118,11 +101,44 @@ struct InventoryDetailView: View {
             }
         }
     }
+}
 
-    private var documentSection: some View {
+private struct DocumentSection: View {
+    var body: some View {
         Section("Document") {
             Label("PDF attached", systemImage: "doc.fill")
                 .foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Main View
+
+struct InventoryDetailView: View {
+    let item: InventoryItem
+
+    @State private var showingEdit = false
+
+    var body: some View {
+        List {
+            PhotoSection(item: item)
+            DetailsSection(item: item)
+            ClassifySection(item: item)
+            if item.pdfData != nil {
+                DocumentSection()
+            }
+        }
+        .navigationTitle(item.name.isEmpty ? "Item" : item.name)
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Edit", systemImage: "pencil") {
+                    showingEdit = true
+                }
+            }
+        }
+        .sheet(isPresented: $showingEdit) {
+            AddEditInventoryView(item: item)
         }
     }
 }

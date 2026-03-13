@@ -7,22 +7,10 @@
 
 import SwiftUI
 
-struct InventoryGridItemView: View {
+private struct ImageArea: View {
     let item: InventoryItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            imageArea
-            infoArea
-        }
-        .clipShape(.rect(cornerRadius: 16))
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
-        #if !targetEnvironment(macCatalyst)
-        .hoverEffect()
-        #endif
-    }
-
-    private var imageArea: some View {
         Group {
             if let data = item.imageData, let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
@@ -50,8 +38,12 @@ struct InventoryGridItemView: View {
         .frame(height: 120)
         .clipped()
     }
+}
 
-    private var infoArea: some View {
+private struct InfoArea: View {
+    let item: InventoryItem
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(item.name.isEmpty ? "Unnamed" : item.name)
                 .bold()
@@ -65,5 +57,21 @@ struct InventoryGridItemView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(8)
+    }
+}
+
+struct InventoryGridItemView: View {
+    let item: InventoryItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ImageArea(item: item)
+            InfoArea(item: item)
+        }
+        .clipShape(.rect(cornerRadius: 16))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        #if !targetEnvironment(macCatalyst)
+        .hoverEffect()
+        #endif
     }
 }

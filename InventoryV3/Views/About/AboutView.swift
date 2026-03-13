@@ -42,7 +42,7 @@ struct AboutView: View {
                         }
                         Button("Cancel", role: .cancel) {}
                     } message: {
-                        Text("This will add sample rooms, brands, categories, owners, and 10 inventory items to your existing data.")
+                        Text("This will add sample rooms, brands, categories, owners, and 50 inventory items to your existing data.")
                     }
 
                     Button("Delete All Data", systemImage: "trash") {

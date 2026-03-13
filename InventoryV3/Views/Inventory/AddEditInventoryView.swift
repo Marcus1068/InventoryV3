@@ -74,6 +74,152 @@ final class AddEditInventoryViewModel {
     }
 }
 
+// MARK: - Section Views
+
+private struct DetailsSection: View {
+    @Bindable var viewModel: AddEditInventoryViewModel
+
+    var body: some View {
+        Section("Item Details") {
+            TextField("Name", text: $viewModel.name)
+            TextField("Serial Number", text: $viewModel.serialNumber)
+            HStack {
+                Text("Price")
+                Spacer()
+                TextField(
+                    "0.00",
+                    value: $viewModel.price,
+                    format: .number.precision(.fractionLength(2))
+                )
+                .multilineTextAlignment(.trailing)
+                .keyboardType(.decimalPad)
+            }
+            TextField("Remarks", text: $viewModel.remark, axis: .vertical)
+                .lineLimit(3, reservesSpace: true)
+        }
+    }
+}
+
+private struct WarrantySection: View {
+    @Bindable var viewModel: AddEditInventoryViewModel
+
+    var body: some View {
+        Section("Warranty (months)") {
+            Picker("Warranty", selection: $viewModel.warrantyMonths) {
+                Text("None").tag(0)
+                ForEach([6, 12, 24, 36, 48, 60], id: \.self) { months in
+                    Text("\(months)").tag(months)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+    }
+}
+
+private struct PhotoSection: View {
+    @Bindable var viewModel: AddEditInventoryViewModel
+    @Binding var selectedPhotoItem: PhotosPickerItem?
+    @Binding var showingCamera: Bool
+    @Binding var showingRemoveImageAlert: Bool
+
+    var body: some View {
+        Section("Photo") {
+            if let data = viewModel.imageData, let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 200)
+                    .clipShape(.rect(cornerRadius: 8))
+                Button("Remove Photo", role: .destructive) {
+                    showingRemoveImageAlert = true
+                }
+            }
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                Label("Choose from Library", systemImage: "photo.on.rectangle")
+            }
+            #if !targetEnvironment(macCatalyst)
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Take Photo", systemImage: "camera") {
+                    showingCamera = true
+                }
+            }
+            #endif
+        }
+    }
+}
+
+private struct DocumentSection: View {
+    @Bindable var viewModel: AddEditInventoryViewModel
+    @Binding var showingFilePicker: Bool
+
+    var body: some View {
+        Section("Document") {
+            if viewModel.pdfData != nil {
+                Label("PDF attached", systemImage: "doc.fill")
+                    .foregroundStyle(.secondary)
+                Button("Remove PDF", role: .destructive) {
+                    viewModel.pdfData = nil
+                }
+            } else {
+                Button("Attach PDF", systemImage: "doc.badge.plus") {
+                    showingFilePicker = true
+                }
+            }
+        }
+    }
+}
+
+private struct ClassifySection: View {
+    @Bindable var viewModel: AddEditInventoryViewModel
+    let rooms: [Room]
+    let brands: [Brand]
+    let categories: [ItemCategory]
+    let owners: [Owner]
+    @Binding var addRelatedSheet: AddRelatedSheet?
+
+    var body: some View {
+        Section("Classify") {
+            Picker("Room", selection: $viewModel.selectedRoom) {
+                Text("Select Room").tag(Optional<Room>.none)
+                ForEach(rooms) { room in
+                    Label(room.name, systemImage: room.sfSymbol).tag(Optional(room))
+                }
+            }
+            addNewButton("Add New Room…") { addRelatedSheet = .room }
+            Picker("Brand", selection: $viewModel.selectedBrand) {
+                Text("Select Brand").tag(Optional<Brand>.none)
+                ForEach(brands) { brand in
+                    Label(brand.name, systemImage: brand.sfSymbol).tag(Optional(brand))
+                }
+            }
+            addNewButton("Add New Brand…") { addRelatedSheet = .brand }
+            Picker("Category", selection: $viewModel.selectedCategory) {
+                Text("Select Category").tag(Optional<ItemCategory>.none)
+                ForEach(categories) { category in
+                    Label(category.name, systemImage: category.sfSymbol).tag(Optional(category))
+                }
+            }
+            addNewButton("Add New Category…") { addRelatedSheet = .category }
+            Picker("Owner", selection: $viewModel.selectedOwner) {
+                Text("Select Owner").tag(Optional<Owner>.none)
+                ForEach(owners) { owner in
+                    Text(owner.name).tag(Optional(owner))
+                }
+            }
+            addNewButton("Add New Owner…") { addRelatedSheet = .owner }
+        }
+    }
+
+    private func addNewButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(title, systemImage: "plus", action: action)
+            .buttonStyle(.glass)
+            .font(.subheadline)
+            .frame(maxWidth: .infinity)
+            .listRowBackground(Color.clear)
+    }
+}
+
 // MARK: - View
 
 struct AddEditInventoryView: View {
@@ -102,11 +248,23 @@ struct AddEditInventoryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                detailsSection
-                warrantySection
-                photoSection
-                documentSection
-                classifySection
+                DetailsSection(viewModel: viewModel)
+                WarrantySection(viewModel: viewModel)
+                PhotoSection(
+                    viewModel: viewModel,
+                    selectedPhotoItem: $selectedPhotoItem,
+                    showingCamera: $showingCamera,
+                    showingRemoveImageAlert: $showingRemoveImageAlert
+                )
+                DocumentSection(viewModel: viewModel, showingFilePicker: $showingFilePicker)
+                ClassifySection(
+                    viewModel: viewModel,
+                    rooms: rooms,
+                    brands: brands,
+                    categories: categories,
+                    owners: owners,
+                    addRelatedSheet: $addRelatedSheet
+                )
             }
             .navigationTitle(item == nil ? "Add Item" : "Edit Item")
             .navigationBarTitleDisplayMode(.inline)
@@ -166,122 +324,5 @@ struct AddEditInventoryView: View {
                 }
             }
         }
-    }
-
-    // MARK: - Sections
-
-    private var warrantySection: some View {
-        Section("Warranty (months)") {
-            Picker("Warranty", selection: $viewModel.warrantyMonths) {
-                Text("None").tag(0)
-                ForEach([6, 12, 24, 36, 48, 60], id: \.self) { months in
-                    Text("\(months)").tag(months)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-        }
-    }
-
-    private var detailsSection: some View {
-        Section("Item Details") {
-            TextField("Name", text: $viewModel.name)
-            TextField("Serial Number", text: $viewModel.serialNumber)
-            HStack {
-                Text("Price")
-                Spacer()
-                TextField(
-                    "0.00",
-                    value: $viewModel.price,
-                    format: .number.precision(.fractionLength(2))
-                )
-                .multilineTextAlignment(.trailing)
-                .keyboardType(.decimalPad)
-            }
-            TextField("Remarks", text: $viewModel.remark, axis: .vertical)
-                .lineLimit(3, reservesSpace: true)
-        }
-    }
-
-    private var photoSection: some View {
-        Section("Photo") {
-            if let data = viewModel.imageData, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxHeight: 200)
-                    .clipShape(.rect(cornerRadius: 8))
-                Button("Remove Photo", role: .destructive) {
-                    showingRemoveImageAlert = true
-                }
-            }
-            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                Label("Choose from Library", systemImage: "photo.on.rectangle")
-            }
-            #if !targetEnvironment(macCatalyst)
-            if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                Button("Take Photo", systemImage: "camera") {
-                    showingCamera = true
-                }
-            }
-            #endif
-        }
-    }
-
-    private var documentSection: some View {
-        Section("Document") {
-            if viewModel.pdfData != nil {
-                Label("PDF attached", systemImage: "doc.fill")
-                    .foregroundStyle(.secondary)
-                Button("Remove PDF", role: .destructive) {
-                    viewModel.pdfData = nil
-                }
-            } else {
-                Button("Attach PDF", systemImage: "doc.badge.plus") {
-                    showingFilePicker = true
-                }
-            }
-        }
-    }
-
-    private var classifySection: some View {
-        Section("Classify") {
-            Picker("Room", selection: $viewModel.selectedRoom) {
-                Text("Select Room").tag(Optional<Room>.none)
-                ForEach(rooms) { room in
-                    Label(room.name, systemImage: room.sfSymbol).tag(Optional(room))
-                }
-            }
-            addNewButton("Add New Room…") { addRelatedSheet = .room }
-            Picker("Brand", selection: $viewModel.selectedBrand) {
-                Text("Select Brand").tag(Optional<Brand>.none)
-                ForEach(brands) { brand in
-                    Label(brand.name, systemImage: brand.sfSymbol).tag(Optional(brand))
-                }
-            }
-            addNewButton("Add New Brand…") { addRelatedSheet = .brand }
-            Picker("Category", selection: $viewModel.selectedCategory) {
-                Text("Select Category").tag(Optional<ItemCategory>.none)
-                ForEach(categories) { category in
-                    Label(category.name, systemImage: category.sfSymbol).tag(Optional(category))
-                }
-            }
-            addNewButton("Add New Category…") { addRelatedSheet = .category }
-            Picker("Owner", selection: $viewModel.selectedOwner) {
-                Text("Select Owner").tag(Optional<Owner>.none)
-                ForEach(owners) { owner in
-                    Text(owner.name).tag(Optional(owner))
-                }
-            }
-            addNewButton("Add New Owner…") { addRelatedSheet = .owner }
-        }
-    }
-
-    private func addNewButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, systemImage: "plus", action: action)
-            .buttonStyle(.glass)
-            .font(.subheadline)
-            .frame(maxWidth: .infinity)
-            .listRowBackground(Color.clear)
     }
 }

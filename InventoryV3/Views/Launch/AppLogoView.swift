@@ -22,9 +22,9 @@ struct AppLogoView: View {
 
             VStack(spacing: size * 0.035) {
                 shelfRow(filled: 4, of: 4)
-                shelfDivider
+                ShelfDivider(size: size)
                 shelfRow(filled: 4, of: 4)
-                shelfDivider
+                ShelfDivider(size: size)
                 shelfRow(filled: 3, of: 4)
             }
             .frame(width: size * 0.68, height: size * 0.66)
@@ -46,12 +46,6 @@ struct AppLogoView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private var shelfDivider: some View {
-        Capsule()
-            .fill(Color.white.opacity(0.45))
-            .frame(height: size * 0.018)
-    }
-
     // MARK: - Gradient
 
     private var logoGradient: LinearGradient {
@@ -63,6 +57,16 @@ struct AppLogoView: View {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+    }
+}
+
+private struct ShelfDivider: View {
+    let size: CGFloat
+
+    var body: some View {
+        Capsule()
+            .fill(Color.white.opacity(0.45))
+            .frame(height: size * 0.018)
     }
 }
 
