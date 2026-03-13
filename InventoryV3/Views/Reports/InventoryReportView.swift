@@ -21,6 +21,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct InventoryReportView: View {
     @Environment(\.dismiss) private var dismiss
@@ -29,7 +30,8 @@ struct InventoryReportView: View {
     @State private var pdfURL: URL?
     @State private var isGenerating = false
 
-    private static let pageWidth: CGFloat = 595   // A4 width in points
+    private static let pageWidth: CGFloat  = 595   // A4 width in points
+    private static let pageHeight: CGFloat = 842   // A4 height in points
 
     var body: some View {
         NavigationStack {
@@ -72,35 +74,95 @@ struct InventoryReportView: View {
 
     // MARK: - PDF generation
 
+    /// Returns the natural rendered height (in points) of a view at page width.
+    @MainActor
+    private func measuredHeight<V: View>(_ view: V) -> CGFloat {
+        let r = ImageRenderer(content: view)
+        r.proposedSize = ProposedViewSize(width: Self.pageWidth, height: nil)
+        r.scale = 1
+        return r.uiImage?.size.height ?? 56
+    }
+
     @MainActor
     private func buildPDF() async {
         isGenerating = true
         defer { isGenerating = false }
 
-        let content = InventoryReportContent(items: items)
-            .frame(width: Self.pageWidth)
+        // Measure actual header/footer heights from their rendered images
+        let headerHeight = measuredHeight(
+            PDFPageHeader(items: items, pageIndex: 0, pageCount: 1).frame(width: Self.pageWidth)
+        )
+        let footerHeight = measuredHeight(
+            PDFPageFooter(pageIndex: 0, pageCount: 1).frame(width: Self.pageWidth)
+        )
+        let gap: CGFloat = 10   // whitespace between header/footer and body
+        let contentY = headerHeight + gap
+        let contentHeight = Self.pageHeight - contentY - gap - footerHeight
 
-        let renderer = ImageRenderer(content: content)
-        renderer.proposedSize = ProposedViewSize(width: Self.pageWidth, height: nil)
-        renderer.scale = 2
+        // Render body content (item rows only, no decorations)
+        let bodyView = InventoryReportContent(items: items, showPageDecorations: false)
+            .frame(width: Self.pageWidth)
+        let bodyRenderer = ImageRenderer(content: bodyView)
+        bodyRenderer.proposedSize = ProposedViewSize(width: Self.pageWidth, height: nil)
+        bodyRenderer.scale = 2
+        guard let bodyImage = bodyRenderer.uiImage else { return }
+
+        let pageCount = max(1, Int(ceil(bodyImage.size.height / contentHeight)))
+
+        // Pre-render per-page headers and footers
+        let headerImages: [UIImage] = (0..<pageCount).compactMap { pageIndex in
+            let view = PDFPageHeader(items: items, pageIndex: pageIndex, pageCount: pageCount)
+                .frame(width: Self.pageWidth)
+            let r = ImageRenderer(content: view)
+            r.proposedSize = ProposedViewSize(width: Self.pageWidth, height: nil)
+            r.scale = 2
+            return r.uiImage
+        }
+        let footerImages: [UIImage] = (0..<pageCount).compactMap { pageIndex in
+            let view = PDFPageFooter(pageIndex: pageIndex, pageCount: pageCount)
+                .frame(width: Self.pageWidth)
+            let r = ImageRenderer(content: view)
+            r.proposedSize = ProposedViewSize(width: Self.pageWidth, height: nil)
+            r.scale = 2
+            return r.uiImage
+        }
 
         let filename = "InventoryReport-\(Date.now.formatted(.iso8601)).pdf"
             .replacing(":", with: "-")
             .replacing(" ", with: "_")
         let url = URL.temporaryDirectory.appending(path: filename)
 
-        renderer.render { size, draw in
-            var box = CGRect(origin: .zero, size: size)
-            guard
-                let consumer = CGDataConsumer(url: url as CFURL),
-                let ctx = CGContext(consumer: consumer, mediaBox: &box, nil)
-            else { return }
-            ctx.beginPDFPage(nil)
-            draw(ctx)
-            ctx.endPDFPage()
-            ctx.closePDF()
+        let pageRect = CGRect(x: 0, y: 0, width: Self.pageWidth, height: Self.pageHeight)
+        let pdfRenderer = UIGraphicsPDFRenderer(bounds: pageRect)
+
+        let data = pdfRenderer.pdfData { ctx in
+            for pageIndex in 0..<pageCount {
+                ctx.beginPage()
+
+                // Per-page header
+                if pageIndex < headerImages.count {
+                    headerImages[pageIndex].draw(in: CGRect(x: 0, y: 0,
+                                                            width: Self.pageWidth, height: headerHeight))
+                }
+
+                // Body slice, clipped to the content band (with gap above and below)
+                let contentRect = CGRect(x: 0, y: contentY,
+                                         width: Self.pageWidth, height: contentHeight)
+                ctx.cgContext.saveGState()
+                ctx.cgContext.clip(to: contentRect)
+                bodyImage.draw(at: CGPoint(x: 0, y: contentY - CGFloat(pageIndex) * contentHeight))
+                ctx.cgContext.restoreGState()
+
+                // Per-page footer
+                if pageIndex < footerImages.count {
+                    footerImages[pageIndex].draw(in: CGRect(x: 0,
+                                                            y: Self.pageHeight - footerHeight,
+                                                            width: Self.pageWidth, height: footerHeight))
+                }
+            }
         }
 
+        try? data.write(to: url)
         pdfURL = url
     }
 }

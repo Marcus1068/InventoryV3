@@ -34,6 +34,9 @@ struct ContentView: View {
             Tab("Reports", systemImage: "chart.bar") {
                 ReportsView()
             }
+            Tab("Export", systemImage: "tablecells") {
+                ExportImportView()
+            }
             Tab("About", systemImage: "info.circle") {
                 AboutView()
             }

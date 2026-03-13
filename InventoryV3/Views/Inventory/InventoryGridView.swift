@@ -107,6 +107,29 @@ private struct InventoryFilterBar: View {
     }
 }
 
+// MARK: - Item count banner
+
+private struct ItemCountBanner: View {
+    let total: Int
+    let filtered: Int
+    let isFiltered: Bool
+
+    var body: some View {
+        HStack {
+            if isFiltered {
+                Text("\(filtered) of ^[\(total) item](inflect: true)")
+            } else {
+                Text("^[\(total) item](inflect: true)")
+            }
+            Spacer()
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal)
+        .padding(.vertical, 6)
+    }
+}
+
 // MARK: - Grid view
 
 struct InventoryGridView: View {
@@ -156,6 +179,15 @@ struct InventoryGridView: View {
                         selectedRoom: $selectedRoom,
                         selectedOwner: $selectedOwner
                     )
+                }
+
+                if !items.isEmpty {
+                    ItemCountBanner(
+                        total: items.count,
+                        filtered: filteredItems.count,
+                        isFiltered: isFiltered
+                    )
+                    Divider()
                 }
 
                 Group {
