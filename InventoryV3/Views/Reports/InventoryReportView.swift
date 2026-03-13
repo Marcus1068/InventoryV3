@@ -106,6 +106,9 @@ struct InventoryReportView: View {
 }
 
 #Preview {
-    InventoryReportView()
-        .modelContainer(for: InventoryItem.self, inMemory: true)
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: InventoryItem.self, configurations: config)
+    SampleDataGenerator.generate(in: container.mainContext)
+    return InventoryReportView()
+        .modelContainer(container)
 }

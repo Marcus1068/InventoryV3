@@ -23,6 +23,7 @@
 
 
 import SwiftUI
+import SwiftData
 
 // MARK: - Report Header
 
@@ -78,9 +79,9 @@ private struct ReportFooter: View {
                 .foregroundStyle(Color(red: 0.28, green: 0.12, blue: 0.72))
             Spacer()
             Text(Date.now.formatted(date: .abbreviated, time: .shortened))
+                .foregroundStyle(Color(red: 0.30, green: 0.30, blue: 0.30))
         }
         .font(.caption)
-        .foregroundStyle(.secondary)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(Color(red: 0.95, green: 0.95, blue: 0.98))
@@ -131,7 +132,7 @@ private struct ItemInfo: View {
                 }
             }
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color(red: 0.35, green: 0.35, blue: 0.35))
         }
     }
 }
@@ -170,6 +171,29 @@ private struct ReportItemRow: View {
         .padding(.vertical, 9)
         .background(isAlternate ? Color(red: 0.96, green: 0.96, blue: 1.00) : .white)
     }
+}
+
+// MARK: - Top-level report view
+
+// MARK: - Preview
+
+struct ReportContentPreview: View {
+    @Query(sort: \InventoryItem.name) private var items: [InventoryItem]
+
+    var body: some View {
+        ScrollView([.horizontal, .vertical]) {
+            InventoryReportContent(items: items)
+                .frame(width: 595)
+        }
+    }
+}
+
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: InventoryItem.self, configurations: config)
+    SampleDataGenerator.generate(in: container.mainContext)
+    return ReportContentPreview()
+        .modelContainer(container)
 }
 
 // MARK: - Top-level report view
