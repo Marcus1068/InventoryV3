@@ -73,5 +73,5 @@ struct BrandsListView: View {
 
 #Preview {
     BrandsListView()
-        .modelContainer(for: Brand.self, inMemory: true)
+        .modelContainer(for: [InventoryItem.self, Room.self, Brand.self, ItemCategory.self, Owner.self], inMemory: true)
 }
