@@ -69,6 +69,7 @@ struct ReportsView: View {
             .navigationTitle("Reports")
             .sheet(isPresented: $showingReport) {
                 InventoryReportView()
+                    .presentationSizing(.page)
             }
         }
     }

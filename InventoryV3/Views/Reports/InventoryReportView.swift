@@ -44,13 +44,10 @@ struct InventoryReportView: View {
                     .padding()
             }
             .background(Color(red: 0.88, green: 0.89, blue: 0.92))
-            .navigationTitle("Inventory Report")
+            .navigationTitle("Report")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
-                }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     if isGenerating {
                         ProgressView()
                     } else if let url = pdfURL {
@@ -62,8 +59,10 @@ struct InventoryReportView: View {
                             )
                         ) {
                             Label("Share PDF", systemImage: "square.and.arrow.up")
+                                .labelStyle(.iconOnly)
                         }
                     }
+                    Button("Done") { dismiss() }
                 }
             }
             .task {

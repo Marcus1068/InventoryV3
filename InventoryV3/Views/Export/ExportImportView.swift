@@ -23,11 +23,38 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
+// MARK: - CSV FileDocument
+
+/// A `FileDocument` that wraps CSV text so `fileExporter` saves a proper
+/// `.csv` file on both iOS and macOS rather than sharing a plain-text URL.
+struct CSVDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.commaSeparatedText, .plainText] }
+
+    var content: String
+
+    init(content: String = "") {
+        self.content = content
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        guard let data = configuration.file.regularFileContents,
+              let string = String(data: data, encoding: .utf8) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        content = string
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: Data(content.utf8))
+    }
+}
+
 // MARK: - Export section
 
 private struct ExportSection: View {
     let items: [InventoryItem]
     let viewModel: ExportImportViewModel
+    @Binding var showingExporter: Bool
 
     var body: some View {
         Section {
@@ -37,15 +64,11 @@ private struct ExportSection: View {
                     Text("Generating CSV…")
                         .foregroundStyle(.secondary)
                 }
-            } else if let url = viewModel.csvURL {
-                ShareLink(
-                    item: url,
-                    preview: SharePreview(
-                        "Inventory.csv",
-                        image: Image(systemName: "tablecells")
-                    )
-                ) {
-                    Label("Share CSV", systemImage: "square.and.arrow.up")
+            } else if viewModel.csvContent != nil {
+                Button {
+                    showingExporter = true
+                } label: {
+                    Label("Save / Share CSV", systemImage: "square.and.arrow.up")
                 }
                 Button("Regenerate") {
                     Task { await viewModel.exportCSV(items: items) }
@@ -53,7 +76,10 @@ private struct ExportSection: View {
                 .foregroundStyle(.secondary)
             } else {
                 Button {
-                    Task { await viewModel.exportCSV(items: items) }
+                    Task {
+                        await viewModel.exportCSV(items: items)
+                        showingExporter = true
+                    }
                 } label: {
                     Label("Export to CSV", systemImage: "arrow.up.doc")
                 }
@@ -153,18 +179,25 @@ struct ExportImportView: View {
 
     @State private var viewModel = ExportImportViewModel()
     @State private var showingImporter = false
+    @State private var showingExporter = false
 
     var body: some View {
         NavigationStack {
             Form {
-                ExportSection(items: items, viewModel: viewModel)
+                ExportSection(items: items, viewModel: viewModel, showingExporter: $showingExporter)
                 ImportSection(viewModel: viewModel, showingImporter: $showingImporter)
                 FormatReferenceSection()
             }
             .navigationTitle("Export & Import")
+            .fileExporter(
+                isPresented: $showingExporter,
+                document: CSVDocument(content: viewModel.csvContent ?? ""),
+                contentType: .commaSeparatedText,
+                defaultFilename: "Inventory"
+            ) { _ in }
             .fileImporter(
                 isPresented: $showingImporter,
-                allowedContentTypes: [.commaSeparatedText],
+                allowedContentTypes: [.commaSeparatedText, .plainText],
                 allowsMultipleSelection: false
             ) { result in
                 switch result {

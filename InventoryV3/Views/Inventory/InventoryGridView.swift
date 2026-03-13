@@ -113,6 +113,12 @@ private struct ItemCountBanner: View {
     let total: Int
     let filtered: Int
     let isFiltered: Bool
+    let filteredPrice: Double
+    let totalPrice: Double
+
+    private var currencyCode: String {
+        Locale.current.currency?.identifier ?? "USD"
+    }
 
     var body: some View {
         HStack {
@@ -121,6 +127,11 @@ private struct ItemCountBanner: View {
             } else {
                 Text("^[\(total) item](inflect: true)")
             }
+            Text("·")
+                .foregroundStyle(.tertiary)
+            Text("Overall sum:")
+            Text(isFiltered ? filteredPrice : totalPrice, format: .currency(code: currencyCode))
+                .monospacedDigit()
             Spacer()
         }
         .font(.subheadline)
@@ -185,7 +196,9 @@ struct InventoryGridView: View {
                     ItemCountBanner(
                         total: items.count,
                         filtered: filteredItems.count,
-                        isFiltered: isFiltered
+                        isFiltered: isFiltered,
+                        filteredPrice: filteredItems.reduce(0) { $0 + $1.price },
+                        totalPrice: items.reduce(0) { $0 + $1.price }
                     )
                     Divider()
                 }

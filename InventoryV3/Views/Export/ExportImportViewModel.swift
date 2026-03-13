@@ -36,7 +36,7 @@ struct ImportResult {
 final class ExportImportViewModel {
 
     var isExporting = false
-    var csvURL: URL?
+    var csvContent: String?
     var isImporting = false
     var importResult: ImportResult?
     var importError: String?
@@ -46,15 +46,7 @@ final class ExportImportViewModel {
     func exportCSV(items: [InventoryItem]) async {
         isExporting = true
         defer { isExporting = false }
-        csvURL = nil
-
-        let csv = buildCSV(from: items)
-        let filename = "Inventory-\(Date.now.formatted(.iso8601)).csv"
-            .replacing(":", with: "-")
-            .replacing(" ", with: "_")
-        let url = URL.temporaryDirectory.appending(path: filename)
-        try? csv.write(to: url, atomically: true, encoding: .utf8)
-        csvURL = url
+        csvContent = buildCSV(from: items)
     }
 
     private func buildCSV(from items: [InventoryItem]) -> String {
