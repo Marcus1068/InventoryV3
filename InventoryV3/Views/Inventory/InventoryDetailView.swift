@@ -21,6 +21,8 @@
 
 import SwiftUI
 import SwiftData
+import PDFKit
+import QuickLook
 
 // MARK: - Section Views
 
@@ -118,11 +120,47 @@ private struct ClassifySection: View {
 }
 
 private struct DocumentSection: View {
+    let pdfData: Data
+
+    @State private var thumbnail: UIImage?
+    @State private var previewURL: URL?
+
     var body: some View {
         Section("Document") {
-            Label("PDF attached", systemImage: "doc.fill")
-                .foregroundStyle(.secondary)
+            if let thumbnail {
+                Button {
+                    let url = URL.temporaryDirectory.appending(path: "document-preview.pdf")
+                    try? pdfData.write(to: url)
+                    previewURL = url
+                } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Image(uiImage: thumbnail)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 240)
+                            .clipShape(.rect(cornerRadius: 6))
+                            .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                        Label("Tap to open PDF", systemImage: "doc.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Label("PDF attached", systemImage: "doc.fill")
+                    .foregroundStyle(.secondary)
+            }
         }
+        .task {
+            guard let document = PDFDocument(data: pdfData),
+                  let page = document.page(at: 0) else { return }
+            let pageSize = page.bounds(for: .mediaBox).size
+            let scale = 600.0 / max(pageSize.width, pageSize.height)
+            let size = CGSize(width: pageSize.width * scale, height: pageSize.height * scale)
+            thumbnail = page.thumbnail(of: size, for: .mediaBox)
+        }
+        .quickLookPreview($previewURL)
     }
 }
 
@@ -138,8 +176,8 @@ struct InventoryDetailView: View {
             PhotoSection(item: item)
             DetailsSection(item: item)
             ClassifySection(item: item)
-            if item.pdfData != nil {
-                DocumentSection()
+            if let pdfData = item.pdfData {
+                DocumentSection(pdfData: pdfData)
             }
         }
         .navigationTitle(item.name.isEmpty ? "Item" : item.name)
@@ -153,6 +191,7 @@ struct InventoryDetailView: View {
         }
         .sheet(isPresented: $showingEdit) {
             AddEditInventoryView(item: item)
+                .presentationSizing(.page)
         }
     }
 }

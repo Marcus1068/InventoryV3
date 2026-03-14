@@ -32,7 +32,17 @@ struct AddEditCategoryView: View {
     @State private var name: String
     @State private var sfSymbol: String
 
-    private var canSave: Bool { !name.isEmpty }
+    @Query(sort: \ItemCategory.name) private var existingCategories: [ItemCategory]
+
+    private var isDuplicate: Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return false }
+        return existingCategories.contains { c in
+            c.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame && c !== category
+        }
+    }
+
+    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty && !isDuplicate }
 
     init(category: ItemCategory?, onCreated: ((ItemCategory) -> Void)? = nil) {
         self.category = category
@@ -46,6 +56,11 @@ struct AddEditCategoryView: View {
             Form {
                 Section("Details") {
                     TextField("Name", text: $name)
+                    if isDuplicate {
+                        Text("A category with this name already exists.")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                     NavigationLink {
                         SFSymbolPicker(selection: $sfSymbol)
                     } label: {

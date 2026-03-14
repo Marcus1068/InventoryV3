@@ -36,7 +36,17 @@ struct AddEditRoomView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingCamera = false
 
-    private var canSave: Bool { !name.isEmpty }
+    @Query(sort: \Room.name) private var existingRooms: [Room]
+
+    private var isDuplicate: Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return false }
+        return existingRooms.contains { r in
+            r.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame && r !== room
+        }
+    }
+
+    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty && !isDuplicate }
 
     init(room: Room?, onCreated: ((Room) -> Void)? = nil) {
         self.room = room
@@ -51,6 +61,11 @@ struct AddEditRoomView: View {
             Form {
                 Section("Details") {
                     TextField("Name", text: $name)
+                    if isDuplicate {
+                        Text("A room with this name already exists.")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                     NavigationLink {
                         SFSymbolPicker(selection: $sfSymbol)
                     } label: {

@@ -35,7 +35,17 @@ struct AddEditOwnerView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var showingRemoveImageAlert = false
 
-    private var canSave: Bool { !name.isEmpty }
+    @Query(sort: \Owner.name) private var existingOwners: [Owner]
+
+    private var isDuplicate: Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return false }
+        return existingOwners.contains { o in
+            o.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame && o !== owner
+        }
+    }
+
+    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty && !isDuplicate }
 
     init(owner: Owner?, onCreated: ((Owner) -> Void)? = nil) {
         self.owner = owner
@@ -49,6 +59,11 @@ struct AddEditOwnerView: View {
             Form {
                 Section("Details") {
                     TextField("Name", text: $name)
+                    if isDuplicate {
+                        Text("An owner with this name already exists.")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Section("Photo") {

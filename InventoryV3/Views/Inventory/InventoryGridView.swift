@@ -256,6 +256,7 @@ struct InventoryGridView: View {
             }
             .sheet(isPresented: $showingAddItem) {
                 AddEditInventoryView(item: nil)
+                    .presentationSizing(.page)
             }
         }
     }

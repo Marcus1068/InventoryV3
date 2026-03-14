@@ -26,6 +26,8 @@ struct AboutView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var showSampleDataConfirmation = false
     @State private var showSampleDataSuccess = false
+    @State private var showNothingAdded = false
+    @State private var sampleDataResult: SampleDataResult?
     @State private var showDeleteAllConfirmation = false
 
     var body: some View {
@@ -51,8 +53,13 @@ struct AboutView: View {
                         isPresented: $showSampleDataConfirmation
                     ) {
                         Button("Load Sample Data") {
-                            SampleDataGenerator.generate(in: modelContext)
-                            showSampleDataSuccess = true
+                            let result = SampleDataGenerator.generate(in: modelContext)
+                            sampleDataResult = result
+                            if result.nothingAdded {
+                                showNothingAdded = true
+                            } else {
+                                showSampleDataSuccess = true
+                            }
                         }
                         Button("Cancel", role: .cancel) {}
                     } message: {
@@ -89,7 +96,18 @@ struct AboutView: View {
             .alert("Sample Data Loaded", isPresented: $showSampleDataSuccess) {
                 Button("OK") {}
             } message: {
-                Text("50 sample inventory items with rooms, brands, categories, and owners have been added.")
+                if let r = sampleDataResult {
+                    if r.itemsSkipped > 0 {
+                        Text("Added ^[\(r.itemsInserted) item](inflect: true). ^[\(r.itemsSkipped) item](inflect: true) already existed and \(r.itemsSkipped == 1 ? "was" : "were") skipped.")
+                    } else {
+                        Text("Added ^[\(r.itemsInserted) item](inflect: true) with rooms, brands, categories, and owners.")
+                    }
+                }
+            }
+            .alert("Nothing Added", isPresented: $showNothingAdded) {
+                Button("OK") {}
+            } message: {
+                Text("All sample data already exists in your inventory. No duplicates were inserted.")
             }
         }
     }

@@ -23,6 +23,8 @@ import SwiftUI
 import SwiftData
 import PhotosUI
 import UniformTypeIdentifiers
+import PDFKit
+import QuickLook
 
 // MARK: - Sheet Destination
 
@@ -167,13 +169,39 @@ private struct DocumentSection: View {
     @Bindable var viewModel: AddEditInventoryViewModel
     @Binding var showingFilePicker: Bool
 
+    @State private var thumbnail: UIImage?
+    @State private var previewURL: URL?
+
     var body: some View {
         Section("Document") {
-            if viewModel.pdfData != nil {
-                Label("PDF attached", systemImage: "doc.fill")
-                    .foregroundStyle(.secondary)
+            if let pdfData = viewModel.pdfData {
+                if let thumbnail {
+                    Button {
+                        let url = URL.temporaryDirectory.appending(path: "document-preview.pdf")
+                        try? pdfData.write(to: url)
+                        previewURL = url
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Image(uiImage: thumbnail)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity, maxHeight: 240)
+                                .clipShape(.rect(cornerRadius: 6))
+                                .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                            Label("Tap to preview PDF", systemImage: "doc.fill")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Label("PDF attached", systemImage: "doc.fill")
+                        .foregroundStyle(.secondary)
+                }
                 Button("Remove PDF", role: .destructive) {
                     viewModel.pdfData = nil
+                    thumbnail = nil
                 }
             } else {
                 Button("Attach PDF", systemImage: "doc.badge.plus") {
@@ -181,6 +209,19 @@ private struct DocumentSection: View {
                 }
             }
         }
+        .task(id: viewModel.pdfData) {
+            guard let data = viewModel.pdfData,
+                  let document = PDFDocument(data: data),
+                  let page = document.page(at: 0) else {
+                thumbnail = nil
+                return
+            }
+            let pageSize = page.bounds(for: .mediaBox).size
+            let scale = 600.0 / max(pageSize.width, pageSize.height)
+            let size = CGSize(width: pageSize.width * scale, height: pageSize.height * scale)
+            thumbnail = page.thumbnail(of: size, for: .mediaBox)
+        }
+        .quickLookPreview($previewURL)
     }
 }
 

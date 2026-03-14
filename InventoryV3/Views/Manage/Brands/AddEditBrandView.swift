@@ -32,7 +32,17 @@ struct AddEditBrandView: View {
     @State private var name: String
     @State private var sfSymbol: String
 
-    private var canSave: Bool { !name.isEmpty }
+    @Query(sort: \Brand.name) private var existingBrands: [Brand]
+
+    private var isDuplicate: Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return false }
+        return existingBrands.contains { b in
+            b.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame && b !== brand
+        }
+    }
+
+    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty && !isDuplicate }
 
     init(brand: Brand?, onCreated: ((Brand) -> Void)? = nil) {
         self.brand = brand
@@ -46,6 +56,11 @@ struct AddEditBrandView: View {
             Form {
                 Section("Details") {
                     TextField("Name", text: $name)
+                    if isDuplicate {
+                        Text("A brand with this name already exists.")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                     NavigationLink {
                         SFSymbolPicker(selection: $sfSymbol)
                     } label: {
