@@ -152,6 +152,39 @@ struct PDFPageFooter: View {
     }
 }
 
+// MARK: - Owner info strip
+
+struct OwnerInfoStrip: View {
+    let name: String
+    let address: String
+
+    var body: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 3) {
+                if !name.isEmpty {
+                    Text(name)
+                        .bold()
+                        .font(.subheadline)
+                        .foregroundStyle(Color(red: 0.10, green: 0.10, blue: 0.25))
+                }
+                if !address.isEmpty {
+                    Text(address)
+                        .font(.caption)
+                        .foregroundStyle(Color(red: 0.35, green: 0.35, blue: 0.45))
+                        .lineLimit(4)
+                }
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color(red: 0.96, green: 0.96, blue: 1.00))
+        .overlay(alignment: .bottom) {
+            Divider()
+        }
+    }
+}
+
 // MARK: - Item row sub-views
 
 private struct ItemThumbnail: View {
@@ -265,6 +298,8 @@ struct ReportContentPreview: View {
 struct InventoryReportContent: View {
     let items: [InventoryItem]
     var showPageDecorations: Bool = true
+    var ownerName: String = ""
+    var ownerAddress: String = ""
 
     private var groupedByRoom: [(room: Room?, items: [InventoryItem])] {
         let dict = Dictionary(grouping: items) { $0.room }
@@ -279,10 +314,15 @@ struct InventoryReportContent: View {
             .map { (room: $0.key, items: $0.value.sorted { $0.name < $1.name }) }
     }
 
+    private var hasOwnerInfo: Bool { !ownerName.isEmpty || !ownerAddress.isEmpty }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if showPageDecorations {
                 ReportHeader(items: items)
+            }
+            if hasOwnerInfo {
+                OwnerInfoStrip(name: ownerName, address: ownerAddress)
             }
             ForEach(groupedByRoom, id: \.room?.name) { group in
                 roomSection(room: group.room, items: group.items)

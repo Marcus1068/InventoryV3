@@ -30,6 +30,9 @@ struct InventoryReportView: View {
     @State private var pdfURL: URL?
     @State private var isGenerating = false
 
+    @AppStorage("ownerName")    private var ownerName: String = ""
+    @AppStorage("ownerAddress") private var ownerAddress: String = ""
+
     private static let pageWidth: CGFloat  = 595   // A4 width in points
     private static let pageHeight: CGFloat = 842   // A4 height in points
 
@@ -37,7 +40,7 @@ struct InventoryReportView: View {
         NavigationStack {
             ScrollView {
                 // Page shadow wrapper so the white report looks like a document
-                InventoryReportContent(items: items)
+                InventoryReportContent(items: items, ownerName: ownerName, ownerAddress: ownerAddress)
                     .frame(maxWidth: .infinity)
                     .clipShape(.rect(cornerRadius: 4))
                     .shadow(color: .black.opacity(0.18), radius: 12, y: 4)
@@ -99,7 +102,8 @@ struct InventoryReportView: View {
         let contentHeight = Self.pageHeight - contentY - gap - footerHeight
 
         // Render body content (item rows only, no decorations)
-        let bodyView = InventoryReportContent(items: items, showPageDecorations: false)
+        let bodyView = InventoryReportContent(items: items, showPageDecorations: false,
+                                              ownerName: ownerName, ownerAddress: ownerAddress)
             .frame(width: Self.pageWidth)
         let bodyRenderer = ImageRenderer(content: bodyView)
         bodyRenderer.proposedSize = ProposedViewSize(width: Self.pageWidth, height: nil)
